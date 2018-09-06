@@ -1,5 +1,9 @@
 package com.ogya.DTO;
 
+/**
+ * @author FIKRI-PC
+ *
+ */
 public class MstUserDTO {
 
 	private int id;

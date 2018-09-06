@@ -39,16 +39,19 @@ public class CustomUserDetailService implements UserDetailsService {
 	@Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         
-		ResponseEntity<MstUserDTO> response = mstUserService.loadUserByUsername(username);
+		logger.info("[CustomUserDetailService] loadUserByUsername username: {}",username);
+		ResponseEntity<MstUserDTO[]> response = mstUserService.loadUserByUsername(username);
 		
-		MstUserDTO mstUserDTO = response.getBody();
+		MstUserDTO mstUserDTO = response.getBody()[0];
+		logger.info("[CustomUserDetailService] step 1 loadUserByUsername user: {}, pass: {}", mstUserDTO.getUsername(), mstUserDTO.getPassword());
 		
 		List<SimpleGrantedAuthority> authorities = Arrays.asList(new SimpleGrantedAuthority("user"));
 		logger.info("auth: {}",authorities.toArray().toString());
-        if (mstUserDTO == null) {
+        if (mstUserDTO == null || !response.hasBody()) {
             throw new UsernameNotFoundException(String.format("No user found with username '%s'.", username));
         } else {
-        	return new User (mstUserDTO.getUsername(), null, authorities);
+    		logger.info("loadUserByUsername user: {}, pass: {}",mstUserDTO.getUsername() ,mstUserDTO.getPassword());
+        	return new User (mstUserDTO.getUsername(), mstUserDTO.getPassword(), authorities);
         }
 	}
 	
@@ -69,9 +72,9 @@ public class CustomUserDetailService implements UserDetailsService {
 
         logger.debug("Changing password for user '"+ username + "'");
 
-        ResponseEntity<MstUserDTO> response = mstUserService.loadUserByUsername(username);
+        ResponseEntity<MstUserDTO[]> response = mstUserService.loadUserByUsername(username);
 
-        MstUserDTO mstUserDTO = response.getBody();
+        MstUserDTO mstUserDTO = response.getBody()[0];
         
         mstUserDTO.setPassword(passwordEncoder.encode(newPassword));
         /*posting user*/

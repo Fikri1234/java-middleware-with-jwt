@@ -1,8 +1,5 @@
 package com.ogya.Controller;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,9 +24,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import com.ogya.DTO.MstUserDTO;
-import com.ogya.Repository.MstUserRepository;
 import com.ogya.Service.MstUserService;
 
+/**
+ * @author FIKRI-PC
+ *
+ */
 @RestController
 @RequestMapping("/user")
 public class MstUserController {
@@ -46,13 +46,13 @@ public class MstUserController {
 	@GetMapping("/{id}")
 	public ResponseEntity<MstUserDTO> retrieveMstUserById(@PathVariable("id") int id,
 			@RequestHeader HttpHeaders headers) {
+		logger.info("[retrieveMstUserById] id: {} header: {} header ct: {}",id,headers,headers.getContentType());
+		ResponseEntity<MstUserDTO[]> response = mstUserService.loadUserById(headers, id);
 		
-		ResponseEntity<MstUserDTO> response = mstUserService.loadUserById(headers, id);
+		MstUserDTO dep = response.getBody()[0];
+		logger.info("[retrieveMstUserById]  user: {}",dep.getUsername());
 		
-		MstUserDTO dep = response.getBody();
-		logger.info("nama user: {}",dep.getUsername());
-		
-		if (!response.hasBody()) {
+		if (response.hasBody()) {
 			return new ResponseEntity<MstUserDTO> (dep, HttpStatus.OK);
 		}else {
 			logger.error("id not found: ",id);
@@ -61,17 +61,15 @@ public class MstUserController {
 	}
 	
 //  --------------- retreave single data by username ------------------
-	@GetMapping("/{id}")
-	public ResponseEntity<MstUserDTO> retrieveMstUserByUsername(@PathVariable("user_name") String user_name,
+	@GetMapping("?username={username}")
+	public ResponseEntity<MstUserDTO> retrieveMstUserByUsername(@PathVariable("username") String username,
 			@RequestHeader HttpHeaders headers) {
 		
 		Map<String, String> uriVariable = new HashMap<>();
-		uriVariable.put("user_name", String.valueOf(user_name));
+		uriVariable.put("username", String.valueOf(username));
 		
 		HttpEntity<String> entity = new HttpEntity<String>(headers);
-		ResponseEntity<MstUserDTO> response = restTemplate.exchange("http://localhost:3000/users?user_name={user_name}",HttpMethod.GET, entity, MstUserDTO.class,uriVariable);
-		
-		assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
+		ResponseEntity<MstUserDTO> response = restTemplate.exchange("http://localhost:3000/users?username={username}",HttpMethod.GET, entity, MstUserDTO.class,uriVariable);
 		
 		MstUserDTO dep = response.getBody();
 		
@@ -80,7 +78,7 @@ public class MstUserController {
 		if (!response.hasBody()) {
 			return new ResponseEntity<MstUserDTO> (dep, HttpStatus.OK);
 		}else {
-			logger.error("id not found: ",user_name);
+			logger.error("id not found: ",username);
 			return new ResponseEntity<MstUserDTO>(HttpStatus.NOT_FOUND);
 		}
 	}
@@ -91,14 +89,14 @@ public class MstUserController {
 		
 		HttpEntity<String> entity = new HttpEntity<String>(headers);
 		logger.info("test 1");
-		ResponseEntity<List<MstUserDTO>> response = restTemplate.exchange("http://localhost:3000/users/}", HttpMethod.GET, entity, new ParameterizedTypeReference<List<MstUserDTO>>() {} );
+		ResponseEntity<List<MstUserDTO>> response = restTemplate.exchange("http://localhost:3000/users/", HttpMethod.GET, entity, new ParameterizedTypeReference<List<MstUserDTO>>() {} );
 		logger.info("test 2");
 		
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 	
 	// ---------------- posting data ----------------------
-	@RequestMapping(value = "/user/", method = RequestMethod.POST, produces= {MediaType.APPLICATION_JSON_VALUE},
+	@RequestMapping(value = "/", method = RequestMethod.POST, produces= {MediaType.APPLICATION_JSON_VALUE},
 			consumes= {MediaType.APPLICATION_JSON_VALUE})
 	public ResponseEntity<?> createUser(@RequestHeader HttpHeaders headers, @RequestBody MstUserDTO mstUserDTO){
 		

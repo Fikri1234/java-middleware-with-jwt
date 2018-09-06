@@ -1,5 +1,9 @@
 package com.ogya.Security;
 
+/**
+ * @author FIKRI-PC
+ *
+ */
 public class JwtAuthenticationRequest {
 
 	private String username;
@@ -11,7 +15,6 @@ public class JwtAuthenticationRequest {
 	}
 	
 	public JwtAuthenticationRequest(String username, String password) {
-		super();
 		this.username = username;
 		this.password = password;
 	}
